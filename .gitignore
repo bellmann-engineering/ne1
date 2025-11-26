@@ -1,0 +1,15 @@
+*.log
+logs/
+build/
+
+# ignore datenbankfiles
+*.db
+
+subfolder/*
+!subfolder/keep.txt
+
+log[0-9]*
+
+*.exe
+
+
