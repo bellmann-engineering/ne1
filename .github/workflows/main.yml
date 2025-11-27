@@ -54,10 +54,10 @@ jobs:
       contents: write
 
     steps:
-      - name: Download build artifact
+      - name: Download built binary
         uses: actions/download-artifact@v4
         with:
-          name: setup-zip
+          name: main-binary
 
       - name: Create GitHub Release
         id: create_release
