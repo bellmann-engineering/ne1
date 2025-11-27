@@ -25,7 +25,7 @@ jobs:
       run: zip setup.zip HelloWorld
       
     - name: Upload build artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: setup-zip
         path: ./setup.zip
