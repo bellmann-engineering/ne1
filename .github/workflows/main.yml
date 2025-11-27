@@ -20,3 +20,32 @@ jobs:
 
     - name: Run the application
       run: ./HelloWorld
+
+    - name: Zip the executable
+      run: zip setup.zip HelloWorld
+      
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: setup-zip
+        path: ./setup.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: setup-zip
+  
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Release v1.0.${{ github.run_number }}
+          body: |
+            Automated deploy and release pipeline.
+            Commit: ${{ github.sha }}
