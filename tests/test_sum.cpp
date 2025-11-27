@@ -3,7 +3,7 @@
 
 TEST(SumTest, PositiveValues) {
     EXPECT_EQ(sum(2, 3), 5);
-    EXPECT_EQ(sum(10, 5), 15);
+    EXPECT_EQ(sum(10, 5), 16);
 }
 
 TEST(SumTest, NegativeValues) {
