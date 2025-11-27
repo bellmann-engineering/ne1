@@ -21,6 +21,17 @@ jobs:
           sudo cmake --build /usr/src/gtest/build
           sudo cp /usr/src/gtest/build/lib/*.a /usr/lib
 
+      - name: Run clang-format check
+        run: |
+          echo "Checking formatting..."
+          # -Werror makes it fail if formatting is wrong
+          clang-format --dry-run --Werror main.cpp
+
+      - name: Run clang-tidy check
+        run: |
+          echo "Running clang-tidy..."
+          clang-tidy main.cpp -- -std=c++17
+
       - name: Build tests
         run: g++ -std=c++17 tests/test_sum.cpp -lgtest -lgtest_main -pthread -o test_sum
 
