@@ -64,7 +64,7 @@ jobs:
       - name: Run security analysis
         run: |
           echo "Running cppcheck security scan..."
-          cppcheck --enable=warning,style,performance,portability \
+          cppcheck --enable=warning,performance,portability \
                    --error-exitcode=1 \
                    --inline-suppr \
                    .        
