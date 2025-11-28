@@ -41,8 +41,8 @@ jobs:
       - name: Compile main.cpp
         run: g++ main.cpp -o main
 
-      - name: Run compiled binary
-        run: ./main
+      #- name: Run compiled binary
+      #  run: ./main
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
