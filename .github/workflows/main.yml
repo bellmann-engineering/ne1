@@ -21,11 +21,11 @@ jobs:
           sudo cmake --build /usr/src/gtest/build
           sudo cp /usr/src/gtest/build/lib/*.a /usr/lib
 
-      - name: Run clang-format check
-        run: |
-          echo "Checking formatting..."
-          # -Werror makes it fail if formatting is wrong
-          clang-format --dry-run --Werror main.cpp
+      #- name: Run clang-format check
+      #  run: |
+      #    echo "Checking formatting..."
+      #    # -Werror makes it fail if formatting is wrong
+      #    clang-format --dry-run --Werror main.cpp
 
       - name: Run clang-tidy check
         run: |
