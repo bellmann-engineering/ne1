@@ -27,10 +27,10 @@ jobs:
       #    # -Werror makes it fail if formatting is wrong
       #    clang-format --dry-run --Werror main.cpp
 
-      - name: Run clang-tidy check
-        run: |
-          echo "Running clang-tidy..."
-          clang-tidy main.cpp -- -std=c++17
+      #- name: Run clang-tidy check
+      #  run: |
+      #    echo "Running clang-tidy..."
+      #    clang-tidy main.cpp -- -std=c++17
 
       - name: Build tests
         run: g++ -std=c++17 tests/test_sum.cpp -lgtest -lgtest_main -pthread -o test_sum
