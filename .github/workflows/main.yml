@@ -13,23 +13,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install build tools and GoogleTest
+      - name: Restore ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ccache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ runner.os }}-
+
+      - name: Install build tools, GoogleTest and ccache
         run: |
           sudo apt-get update
-          sudo apt-get install -y g++ cmake clang-tidy clang-format libgtest-dev lcov
+          sudo apt-get install -y g++ cmake clang-tidy clang-format libgtest-dev ccache
           sudo cmake -S /usr/src/gtest -B /usr/src/gtest/build
           sudo cmake --build /usr/src/gtest/build
           sudo cp /usr/src/gtest/build/lib/*.a /usr/lib
 
-      # - name: Run clang-format check
-      #   run: |
-      #     echo "Checking formatting..."
-      #     clang-format --dry-run --Werror main.cpp
-
-      # - name: Run clang-tidy check
-      #   run: |
-      #     echo "Running clang-tidy..."
-      #     clang-tidy main.cpp -- -std=c++17
+      - name: Configure compiler wrappers
+        run: |
+          echo "export CC='ccache gcc'" >> $GITHUB_ENV
+          echo "export CXX='ccache g++'" >> $GITHUB_ENV
 
       - name: Build tests
         run: g++ -std=c++17 tests/test_sum.cpp -lgtest -lgtest_main -pthread -o test_sum
@@ -75,7 +78,7 @@ jobs:
       - name: Generate coverage report
         run: |
           lcov --capture --directory . --ignore-errors mismatch --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' --output-file coverage.info
+          lcov --remove coverage.info '/usr/*' --ignore-errors mismatch --output-file coverage.info
           lcov --summary coverage.info
 
       - name: Generate HTML coverage report
@@ -89,7 +92,6 @@ jobs:
           path: |
             coverage.info
             coverage-html/
-
 
   security_scan:
     runs-on: ubuntu-latest
