@@ -15,7 +15,7 @@ int main() {
 
 void oob() {
     int arr[3];
-    arr[3] = 42; // array out of bounds
+    arr[2] = 42; // array out of bounds
 }
 
 void uninit() {
