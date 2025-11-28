@@ -15,10 +15,10 @@ int main() {
 
 void oob() {
     int arr[3];
-    arr[5] = 42; // array out of bounds
+    arr[3] = 42; // array out of bounds
 }
 
 void uninit() {
-    int x;
+    int x = 2;
     int y = x + 2; // uninitialized
 }
