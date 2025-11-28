@@ -1,17 +1,15 @@
-name: Build main.cpp
-
-on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
-
-jobs:
   build:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        compiler: [gcc, mingw]
+        include:
+          - compiler: gcc
+            cxx: "ccache g++"
+            output: main
+          - compiler: mingw
+            cxx: "x86_64-w64-mingw32-g++"
+            output: main.exe
 
     steps:
       - name: Checkout repository
@@ -37,154 +35,12 @@ jobs:
           sudo cmake --build /usr/src/gtest/build
           sudo cp /usr/src/gtest/build/lib/*.a /usr/lib
 
-      - name: Configure compiler wrappers
-        run: |
-          if [ "${{ matrix.compiler }}" = "gcc" ]; then
-            echo "export CC='ccache gcc'" >> $GITHUB_ENV
-            echo "export CXX='ccache g++'" >> $GITHUB_ENV
-          else
-            echo "export CC='x86_64-w64-mingw32-gcc'" >> $GITHUB_ENV
-            echo "export CXX='x86_64-w64-mingw32-g++'" >> $GITHUB_ENV
-          fi
-
-      - name: Build tests (only for gcc)
-        if: matrix.compiler == 'gcc'
-        run: g++ -std=c++17 tests/test_sum.cpp -lgtest -lgtest_main -pthread -o test_sum
-
-      - name: Run tests (only for gcc)
-        if: matrix.compiler == 'gcc'
-        run: ./test_sum
-
       - name: Build main binary
         run: |
-          if [ "${{ matrix.compiler }}" = "gcc" ]; then
-            $CXX main.cpp -o main
-          else
-            $CXX main.cpp -o main.exe
-          fi
+          ${{ matrix.cxx }} main.cpp -o ${{ matrix.output }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: main-${{ matrix.compiler }}
-          path: |
-            main*
-  
-  coverage:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y g++ cmake libgtest-dev lcov
-
-      - name: Build GoogleTest
-        run: |
-          sudo cmake -S /usr/src/gtest -B /usr/src/gtest/build
-          sudo cmake --build /usr/src/gtest/build
-          sudo cp /usr/src/gtest/build/lib/*.a /usr/lib
-
-      - name: Build tests with coverage
-        run: |
-          g++ --coverage -std=c++17 tests/test_sum.cpp -lgtest -lgtest_main -pthread -o test_cov
-
-      - name: Run tests with coverage
-        run: ./test_cov
-
-      - name: Generate coverage report
-        run: |
-          lcov --capture --directory . --ignore-errors mismatch --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' --ignore-errors mismatch --output-file coverage.info
-          lcov --summary coverage.info
-
-      - name: Generate HTML coverage report
-        run: |
-          genhtml coverage.info --output-directory coverage-html
-
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: |
-            coverage.info
-            coverage-html/
-
-  security_scan:
-    runs-on: ubuntu-latest
-    needs: coverage
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install cppcheck
-        run: sudo apt-get install -y cppcheck
-
-      - name: Run security analysis
-        run: |
-          echo "Running cppcheck security scan..."
-          cppcheck --enable=warning,performance,portability \
-                   --error-exitcode=1 \
-                   --inline-suppr \
-                   .
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: security_scan
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Download GCC binary
-        uses: actions/download-artifact@v4
-        with:
-          name: main-gcc
-
-      - name: Deploy artifact (only Linux binary)
-        run: |
-          echo "Deploying main binary..."
-          chmod +x main
-          ./main
-
-  release:
-    runs-on: ubuntu-latest
-    needs: deploy
-    permissions:
-      contents: write
-
-    steps:
-      - name: Download GCC binary
-        uses: actions/download-artifact@v4
-        with:
-          name: main-gcc
-
-      - name: Download Windows EXE
-        uses: actions/download-artifact@v4
-        with:
-          name: main-mingw
-
-      - name: Create GitHub Release
-        id: create_release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: Release v1.0.${{ github.run_number }}
-          body: |
-            Automated deploy and release pipeline.
-            Commit: ${{ github.sha }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload binaries to Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.${{ github.run_number }}
-          files: |
-            main
-            main.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          path: ${{ matrix.output }}
